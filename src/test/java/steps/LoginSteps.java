@@ -16,6 +16,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import page.LoginPage;
 import page.NewAccountPage;
 
+import java.io.IOException;
 import java.util.Map;
 
 public class LoginSteps {
@@ -25,13 +26,21 @@ public class LoginSteps {
 
 
 @Before
-public void inicializaNavegador(){
+public void inicializaNavegador(Scenario cenario){
   new Driver(Browser.CHROME);
+  Driver.setNomeCenario(cenario.getName());
+  Driver.criaDiretorio();
+ System.out.println(Driver.getNomeCenario()+"-"+cenario.getStatus());
 
 }
 @After
-public void fechaNavegador(){
+public void fechaNavegador(Scenario cenario) throws IOException {
+    if(cenario.isFailed()) {
+    Driver.printScreen("cenario com erro");
+}
     Driver.getDriver().quit();
+    System.out.println(cenario.getStatus());
+    System.out.println(cenario.isFailed());
 }
 
     @Dado("que a modal esteja aberta")
@@ -63,18 +72,20 @@ public void fechaNavegador(){
     }
 
     @Quando("for realizado o clique no link Create NewAccount")
-    public void forRealizadoOCliqueNoLinkCreateNewAccount() {
+    public void forRealizadoOCliqueNoLinkCreateNewAccount()  {
         loginPage.clicklinkCreateAccount();
+
     }
 
     @Então("a pagina Create NewAccount deve ser exibida")
-    public void aPaginaCreateNewAccountDeveSerExibida() {
+    public void aPaginaCreateNewAccountDeveSerExibida() throws IOException {
         newAccountPage = new NewAccountPage();
         Assert.assertEquals("CREATE ACCOUNT",newAccountPage.getTextNewAccount());
+        Driver.printScreen("logado new account");
     }
 
     @Quando("os campos de login sejam preenchidos da seguinte forma")
-    public void osCamposDeLoginSejamPreenchidosDaSeguinteForma(Map<String,String>map) {
+    public void osCamposDeLoginSejamPreenchidosDaSeguinteForma(Map<String,String>map) throws IOException {
         username = map.get("usuario");
         String password = map.get("senha");
         boolean remember = Boolean.parseBoolean(map.get("remember"));
@@ -82,6 +93,8 @@ public void fechaNavegador(){
         loginPage.setinpPassword(password);
         if(remember)
             loginPage.clickinpRemember();
+        Driver.printScreen("preenchimento dos campos de login");
+
 
         
     }
@@ -92,20 +105,32 @@ public void fechaNavegador(){
     }
 
     @Entao("deve ser possivel logar no sistema")
-    public void deveSerPossivelLogarNoSistema() {
+    public void deveSerPossivelLogarNoSistema() throws IOException {
         Assert.assertEquals(username,loginPage.gettextLogado());
+        Driver.printScreen("logado no sistema");
     }
 
     @Entao("o sistema devera exibir uma mensagem de erro")
-    public void oSistemaDeveraExibirUmaMensagemDeErro() {
+    public void oSistemaDeveraExibirUmaMensagemDeErro() throws IOException {
         Assert.assertEquals("Incorrect user name or password.",loginPage.getTextErroLogin());
+        Driver.printScreen("mensagem de erro");
     }
 
     @Entao("o botao sign in deve permanecer desabilitado")
-    public void oBotaoSignInDevePermanecerDesabilitado() {
+    public void oBotaoSignInDevePermanecerDesabilitado() throws IOException {
         boolean enable = loginPage.isbtnSigIn();
         Assert.assertFalse(enable);
+        Driver.printScreen("Dados em branco");
     }
+    @Dado("que esteja logado no sistema")
+    public void queEstejaLogadoNoSistema(Map<String,String>map) throws IOException {
+        queAModalEstejaAberta();
+        osCamposDeLoginSejamPreenchidosDaSeguinteForma(map);
+        forRealizadoOCliqueNoBotaoSignIn();
+        deveSerPossivelLogarNoSistema();
+
+    }
+
 }
 
 

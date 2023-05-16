@@ -1,3 +1,4 @@
+scr/test/resources/evidencias/*/*.png
 *.iml
 .idea
 target/
